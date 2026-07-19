@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>花生语转换器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(145deg, #2e1a3b 0%, #1f0f2b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .card {
+            max-width: 860px;
+            width: 100%;
+            background: rgba(45, 25, 55, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 32px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(140, 80, 160, 0.3);
+            padding: 28px 28px 20px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header-left h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #f2d9f7;
+            text-shadow: 0 2px 8px #3f1f4a;
+            letter-spacing: 1px;
+        }
+
+        .header-left h1 small {
+            font-size: 0.8rem;
+            font-weight: 400;
+            background: #7a4a8a;
+            color: #f2e0f5;
+            padding: 0 12px;
+            border-radius: 40px;
+            line-height: 1.8rem;
+            margin-left: 6px;
+            box-shadow: inset 0 -2px 0 #5a2e6a;
+        }
+
+        /* ===== 语言切换栏 ===== */
+        .lang-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #3a1f45;
+            border: 1px solid #6a3f7a;
+            border-radius: 60px;
+            padding: 4px 6px;
+            flex-wrap: wrap;
+        }
+
+        .lang-bar .lang-btn {
+            background: transparent;
+            border: none;
+            color: #a07bb0;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .lang-bar .lang-btn:hover {
+            color: #e6d0eb;
+            background: #2d1a35;
+        }
+
+        .lang-bar .lang-btn.active {
+            background: #8f5a9f;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(120, 40, 140, 0.3);
+        }
+
+        .status-badge {
+            background: #3a1f45;
+            border: 1px solid #6a3f7a;
+            border-radius: 60px;
+            padding: 6px 20px;
+            font-size: 0.85rem;
+            color: #c9a8d4;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge strong {
+            color: #f2d9f7;
+        }
+
+        .translate-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .translate-panel {
+            background: #24132b;
+            border-radius: 20px;
+            border: 2px solid #5a2e6a;
+            padding: 12px 16px 8px 16px;
+            transition: border 0.2s, box-shadow 0.2s;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .translate-panel:focus-within {
+            border-color: #b27bc2;
+            box-shadow: 0 0 0 4px rgba(150, 80, 180, 0.2);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .panel-header .panel-label {
+            color: #a07bb0;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-header .panel-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .panel-actions button {
+            background: transparent;
+            border: none;
+            color: #7a5a8a;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 20px;
+            transition: 0.15s;
+        }
+
+        .panel-actions button:hover {
+            background: #3a1f45;
+            color: #e6d0eb;
+        }
+
+        .panel-textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 1.2rem;
+            line-height: 1.7;
+            color: #f5e6f7;
+            font-weight: 450;
+            min-height: 80px;
+            font-family: inherit;
+            width: 100%;
+            padding: 4px 0;
+        }
+
+        .panel-textarea::placeholder {
+            color: #6a4a7a;
+            font-weight: 300;
+            font-size: 1rem;
+        }
+
+        .panel-textarea:disabled {
+            opacity: 0.85;
+        }
+
+        .panel-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding-top: 6px;
+            border-top: 1px solid #3a1f45;
+            margin-top: 6px;
+            min-height: 28px;
+        }
+
+        .panel-footer .char-count {
+            color: #6a4a7a;
+            font-size: 0.7rem;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-bar .btn {
+            background: #5a2e6a;
+            border: none;
+            color: #f2e0f5;
+            padding: 8px 24px;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #7a4a8a;
+        }
+
+        .action-bar .btn:hover {
+            background: #7a4a8a;
+            border-color: #b27bc2;
+            color: #ffffff;
+        }
+
+        .action-bar .btn:active {
+            transform: scale(0.96);
+        }
+
+        .action-bar .btn-icon {
+            background: transparent;
+            border: 1px solid #5a2e6a;
+            color: #b28fc0;
+            padding: 8px 16px;
+        }
+
+        .action-bar .btn-icon:hover {
+            background: #3a1f45;
+            border-color: #7a4a8a;
+            color: #e6d0eb;
+        }
+
+        /* ===== 底部联系方式栏 ===== */
+        .footer-contact {
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #3a1f45;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-contact .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #b28fc0;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            padding: 6px 14px;
+            border-radius: 40px;
+            transition: 0.2s;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+
+        .footer-contact .contact-link:hover {
+            color: #f2d9f7;
+            background: #3a1f45;
+            border-color: #7a4a8a;
+            transform: translateY(-1px);
+        }
+
+        .footer-contact .contact-link:active {
+            transform: scale(0.96);
+        }
+
+        .footer-contact .contact-link .contact-icon {
+            font-size: 1.1rem;
+        }
+
+        .footer-contact .contact-link .contact-name {
+            color: #d4b8dd;
+        }
+
+        .footer-contact .contact-divider {
+            color: #5a2e6a;
+            font-weight: 200;
+            user-select: none;
+        }
+
+        .footer-note {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.75rem;
+            color: #7a5a8a;
+        }
+
+        .footer-note span {
+            background: #1f0f2b;
+            padding: 0 12px;
+            border-radius: 40px;
+            line-height: 1.8;
+            border: 1px solid #3a1f45;
+        }
+
+        /* ===== Toast 提示 ===== */
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: #8f5a9f;
+            color: #ffffff;
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 8px 32px rgba(100, 40, 120, 0.5);
+            border: 1px solid #b27bc2;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            z-index: 999;
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.5px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast .toast-emoji {
+            margin-right: 8px;
+        }
+
+        @media (max-width: 640px) {
+            .card { padding: 16px; }
+            .translate-container { grid-template-columns: 1fr; gap: 12px; }
+            .header { flex-direction: column; align-items: stretch; }
+            .header-left h1 { font-size: 1.4rem; }
+            .status-badge { text-align: center; }
+            .panel-textarea { min-height: 60px; font-size: 1rem; }
+            .action-bar { justify-content: center; }
+            .footer-contact { gap: 8px; }
+            .footer-contact .contact-link { font-size: 0.75rem; padding: 4px 10px; }
+            .lang-bar { justify-content: center; }
+            .toast { top: 20px; padding: 10px 20px; font-size: 0.9rem; width: 90%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast">
+        <span class="toast-emoji">✅</span>
+        <span id="toastMessage">已复制到剪贴板</span>
+    </div>
+
+    <div class="card" role="main">
+        <div class="header">
+            <div class="header-left">
+                <h1>花生语转换器</h1>
+            </div>
+            <!-- 语言切换栏 -->
+            <div class="lang-bar" id="langBar">
+                <button class="lang-btn active" data-lang="zh">中文</button>
+                <button class="lang-btn" data-lang="zh-TW">繁中</button>
+                <button class="lang-btn" data-lang="ja">日本語</button>
+                <button class="lang-btn" data-lang="en">English</button>
+            </div>
+        </div>
+
+        <div class="status-badge" id="statusBadge">
+            🧠 检测中… <strong id="directionLabel">→ 花生语</strong>
+        </div>
+
+        <div class="translate-container">
+            <div class="translate-panel" id="inputPanel">
+                <div class="panel-header">
+                    <span class="panel-label" id="inputLabel">📝 输入</span>
+                    <div class="panel-actions">
+                        <button id="clearBtn" title="清空">✕</button>
+                    </div>
+                </div>
+                <textarea class="panel-textarea" id="inputText" placeholder="输入中文或花生语…" rows="3"></textarea>
+                <div class="panel-footer">
+                    <span class="char-count" id="inputCount">0</span>
+                </div>
+            </div>
+
+            <div class="translate-panel" id="outputPanel">
+                <div class="panel-header">
+                    <span class="panel-label" id="outputLabel">📟 输出</span>
+                    <div class="panel-actions">
+                        <button id="copyBtn" title="复制">📋</button>
+                    </div>
+                </div>
+                <textarea class="panel-textarea" id="outputText" placeholder="转换结果…" rows="3" disabled></textarea>
+                <div class="panel-footer">
+                    <span class="char-count" id="outputCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-icon" id="swapTextBtn">⇄ 交换</button>
+        </div>
+
+        <!-- ===== 底部联系方式栏 ===== -->
+        <div class="footer-contact">
+            <a class="contact-link" href="https://x.com/CNFinderMC" target="_blank" rel="noopener noreferrer" title="X (Twitter) @CNFinderMC">
+                <span class="contact-icon">🐦</span>
+                <span>X：</span>
+                <span class="contact-name">CNFinderMC</span>
+            </a>
+            <span class="contact-divider">|</span>
+            <a class="contact-link" href="https://space.bilibili.com/3546979512617388" target="_blank" rel="noopener noreferrer" title="Bilibili 一只Fin">
+                <span class="contact-icon">📺</span>
+                <span>Bilibili：</span>
+                <span class="contact-name">一只Fin</span>
+            </a>
+            <span class="contact-divider">|</span>
+            <a class="contact-link" href="https://github.com/CNFinder-Linux/huasheng" target="_blank" rel="noopener noreferrer" title="GitHub 项目仓库">
+                <span class="contact-icon">🐙</span>
+                <span>GitHub：</span>
+                <span class="contact-name">CNFinder-Linux/huasheng</span>
+            </a>
+        </div>
+
+        <div class="footer-note">
+            <span>🥜 自动识别方向</span>
+            <span>⚡ 感叹号狂魔</span>
+            <span>✨ emoji 乱入</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ----- 多语言文本库 -----
+            const LANG_TEXT = {
+                'zh': {
+                    inputLabel: '📝 输入',
+                    outputLabel: '📟 输出',
+                    inputPlaceholder: '输入中文或花生语…',
+                    outputPlaceholder: '转换结果…',
+                    statusDetecting: '🧠 检测中…',
+                    directionZhToPeanut: '中文 → 花生语',
+                    directionPeanutToZh: '花生语 → 中文',
+                    directionWaiting: '等待输入',
+                    toastCopied: '已复制到剪贴板',
+                    toastEmpty: '没有内容可复制',
+                    toastCopyFail: '复制失败，请手动复制',
+                    clearTitle: '清空',
+                    copyTitle: '复制',
+                    swapTitle: '交换',
+                    footerAuto: '自动识别方向',
+                    footerExclamation: '感叹号狂魔',
+                    footerEmoji: 'emoji 乱入'
+                },
+                'zh-TW': {
+                    inputLabel: '📝 輸入',
+                    outputLabel: '📟 輸出',
+                    inputPlaceholder: '輸入中文或花生語…',
+                    outputPlaceholder: '轉換結果…',
+                    statusDetecting: '🧠 偵測中…',
+                    directionZhToPeanut: '中文 → 花生語',
+                    directionPeanutToZh: '花生語 → 中文',
+                    directionWaiting: '等待輸入',
+                    toastCopied: '已複製到剪貼簿',
+                    toastEmpty: '沒有內容可複製',
+                    toastCopyFail: '複製失敗，請手動複製',
+                    clearTitle: '清空',
+                    copyTitle: '複製',
+                    swapTitle: '交換',
+                    footerAuto: '自動識別方向',
+                    footerExclamation: '感嘆號狂魔',
+                    footerEmoji: 'emoji 亂入'
+                },
+                'ja': {
+                    inputLabel: '📝 入力',
+                    outputLabel: '📟 出力',
+                    inputPlaceholder: '中国語またはピーナッツ語を入力…',
+                    outputPlaceholder: '変換結果…',
+                    statusDetecting: '🧠 検出中…',
+                    directionZhToPeanut: '中国語 → ピーナッツ語',
+                    directionPeanutToZh: 'ピーナッツ語 → 中国語',
+                    directionWaiting: '入力待ち',
+                    toastCopied: 'クリップボードにコピーしました',
+                    toastEmpty: 'コピーする内容がありません',
+                    toastCopyFail: 'コピーに失敗しました。手動でコピーしてください',
+                    clearTitle: 'クリア',
+                    copyTitle: 'コピー',
+                    swapTitle: '交換',
+                    footerAuto: '自動識別',
+                    footerExclamation: '感嘆符マニア',
+                    footerEmoji: '絵文字乱入'
+                },
+                'en': {
+                    inputLabel: '📝 Input',
+                    outputLabel: '📟 Output',
+                    inputPlaceholder: 'Enter Chinese or Peanut language…',
+                    outputPlaceholder: 'Conversion result…',
+                    statusDetecting: '🧠 Detecting…',
+                    directionZhToPeanut: 'Chinese → Peanut',
+                    directionPeanutToZh: 'Peanut → Chinese',
+                    directionWaiting: 'Waiting for input',
+                    toastCopied: 'Copied to clipboard',
+                    toastEmpty: 'Nothing to copy',
+                    toastCopyFail: 'Copy failed, please copy manually',
+                    clearTitle: 'Clear',
+                    copyTitle: 'Copy',
+                    swapTitle: 'Swap',
+                    footerAuto: 'Auto detect',
+                    footerExclamation: 'Exclamation mania',
+                    footerEmoji: 'Emoji mix'
+                }
+            };
+
+            let currentLang = 'zh';
+
+            // ----- Toast 系统 -----
+            let toastTimer = null;
+
+            function showToast(message, emoji = '✅') {
+                const toast = document.getElementById('toast');
+                const toastMsg = document.getElementById('toastMessage');
+                toastMsg.textContent = message;
+                toast.querySelector('.toast-emoji').textContent = emoji;
+
+                if (toastTimer) {
+                    clearTimeout(toastTimer);
+                    toastTimer = null;
+                }
+
+                toast.classList.add('show');
+
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                    toastTimer = null;
+                }, 2500);
+            }
+
+            // ----- 花生语 emoji 库 -----
+            const EMOJI_SET = [
+                '🥜', '✨', '🌟', '💥', '🔥', '⚡', '💜', '🌸', '🌈', '🎉',
+                '💫', '🌙', '⭐', '🍬', '🍭', '🎀', '💖', '✨', '🫶', '💕'
+            ];
+
+            function getRandomEmoji() {
+                return EMOJI_SET[Math.floor(Math.random() * EMOJI_SET.length)];
+            }
+
+            function getEmojiCount(emotionLevel) {
+                if (emotionLevel === 'high') return 3 + Math.floor(Math.random() * 3);
+                if (emotionLevel === 'mid') return 2 + Math.floor(Math.random() * 2);
+                return 1 + Math.floor(Math.random() * 2);
+            }
+
+            // ----- 核心词典 -----
+            const ENCODE_MAP = new Map([
+                ['我', 'ワ'], ['你', 'キ'], ['他', 'カ'], ['她', 'カ'],
+                ['的', 'ノ'], ['了', 'ル'], ['是', 'シ'], ['不', 'ン'],
+                ['好', 'ヨ'], ['很', 'ヒ'], ['大', 'ダ'], ['小', 'チ'],
+                ['多', 'タ'], ['少', 'ス'], ['去', 'ク'], ['来', 'ラ'],
+                ['在', 'ザ'], ['有', 'ユ'], ['这', 'コ'], ['那', 'ソ'],
+                ['么', 'マ'], ['吗', 'マ'], ['啊', 'ア'], ['呢', 'ニ'],
+                ['吧', 'バ'], ['哦', 'オ'], ['嗯', 'ウ'], ['哈', 'ハ'],
+                ['！', '！'], ['?', '？'], ['.', '。'], [',', '、'],
+                // 繁体中文支持
+                ['我', 'ワ'], ['你', 'キ'], ['他', 'カ'], ['她', 'カ'],
+                ['的', 'ノ'], ['了', 'ル'], ['是', 'シ'], ['不', 'ン'],
+                ['好', 'ヨ'], ['很', 'ヒ'], ['大', 'ダ'], ['小', 'チ'],
+                ['多', 'タ'], ['少', 'ス'], ['去', 'ク'], ['來', 'ラ'],
+                ['在', 'ザ'], ['有', 'ユ'], ['這', 'コ'], ['那', 'ソ'],
+                ['麼', 'マ'], ['嗎', 'マ'], ['啊', 'ア'], ['呢', 'ニ'],
+                ['吧', 'バ'], ['哦', 'オ'], ['嗯', 'ウ'], ['哈', 'ハ'],
+            ]);
+
+            function applyExtraEncode(text) {
+                let result = text;
+                const phraseMap = [
+                    ['厉害', 'すごい'], ['喜欢', '好き'], ['非常', 'めっちゃ'],
+                    ['谢谢', 'ありがと'], ['对不起', 'ごめん'], ['好棒', 'すてき'],
+                    ['可爱', 'かわいい'], ['神仙', 'かみ'], ['神', 'かみ'],
+                    // 繁体
+                    ['厲害', 'すごい'], ['喜歡', '好き'], ['非常', 'めっちゃ'],
+                    ['謝謝', 'ありがと'], ['對不起', 'ごめん'], ['好棒', 'すてき'],
+                    ['可愛', 'かわいい'], ['神仙', 'かみ'], ['神', 'かみ'],
+                    // 日语（非花生语）保留
+                ];
+                for (let [key, val] of phraseMap) {
+                    result = result.replaceAll(key, val);
+                }
+                return result;
+            }
+
+            // ----- 加密：中文/繁中/日语/英语 → 花生语 -----
+            function encodePeanut(text) {
+                if (!text) return '';
+
+                let processed = text;
+                processed = applyExtraEncode(processed);
+
+                let encoded = '';
+                for (let ch of processed) {
+                    if (ENCODE_MAP.has(ch)) {
+                        encoded += ENCODE_MAP.get(ch);
+                    } else {
+                        encoded += ch;
+                    }
+                }
+
+                const hasEmotion = /すごい|好き|めっちゃ|ありがと|すてき|かわいい|かみ/.test(encoded);
+                const hasExclamation = /[！!]/.test(encoded);
+
+                let emotionLevel = 'low';
+                if (hasEmotion) emotionLevel = 'high';
+                else if (hasExclamation || encoded.length > 6) emotionLevel = 'mid';
+
+                let prefix = '';
+                if (hasEmotion || encoded.length > 4) {
+                    const emojiCount = getEmojiCount(emotionLevel);
+                    let emojiStr = '';
+                    for (let i = 0; i < emojiCount; i++) {
+                        emojiStr += getRandomEmoji();
+                    }
+                    prefix = 'ユ ' + emojiStr + ' ';
+                }
+
+                let yuCount = 2;
+                let exCount = 6;
+                if (emotionLevel === 'high') {
+                    yuCount = 4;
+                    exCount = 10;
+                } else if (emotionLevel === 'mid') {
+                    yuCount = 3;
+                    exCount = 8;
+                } else {
+                    yuCount = 2;
+                    exCount = 6;
+                }
+
+                const suffixEmojiCount = 1 + Math.floor(Math.random() * 2);
+                let suffixEmojiStr = '';
+                for (let i = 0; i < suffixEmojiCount; i++) {
+                    suffixEmojiStr += getRandomEmoji();
+                }
+
+                const yuSuffix = 'ユ'.repeat(yuCount);
+                const exSuffix = '！'.repeat(exCount);
+                const suffix = yuSuffix + exSuffix + ' ' + suffixEmojiStr;
+
+                let final = prefix + encoded + ' ' + suffix;
+
+                if (/すごい|好き/.test(encoded)) {
+                    const idx = final.indexOf('すごい');
+                    if (idx !== -1) {
+                        const midEmoji = getRandomEmoji();
+                        final = final.slice(0, idx + 3) + ' ユ ' + midEmoji + ' ' + final.slice(idx + 3);
+                    } else {
+                        const idx2 = final.indexOf('好き');
+                        if (idx2 !== -1) {
+                            const midEmoji = getRandomEmoji();
+                            final = final.slice(0, idx2 + 2) + ' ユ ' + midEmoji + ' ' + final.slice(idx2 + 2);
+                        }
+                    }
+                }
+
+                if (encoded.length > 8 && Math.random() > 0.4) {
+                    const insertPos = Math.floor(final.length * (0.3 + Math.random() * 0.4));
+                    const randomEmoji = getRandomEmoji();
+                    final = final.slice(0, insertPos) + ' ' + randomEmoji + ' ' + final.slice(insertPos);
+                }
+
+                final = final.replace(/ュ/g, 'ユ');
+                final = final.replace(/\s+/g, ' ').trim();
+                return final;
+            }
+
+            // ----- 解密：花生语 → 中文/繁中/日语/英语 -----
+            function decodePeanut(text) {
+                if (!text) return '';
+
+                let decoded = text;
+
+                // 移除 emoji
+                const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F1FF}\u{1F200}-\u{1F2FF}\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{1FB00}-\u{1FBFF}\u{2000}-\u{206F}\u{2E80}-\u{2EFF}\u{3000}-\u{303F}\u{3200}-\u{32FF}\u{3300}-\u{33FF}\u{3400}-\u{4DBF}\u{4E00}-\u{9FFF}\u{F900}-\u{FAFF}]/gu;
+                decoded = decoded.replace(emojiRegex, '');
+
+                // 移除花生语特征
+                decoded = decoded.replace(/ユ/g, '');
+                decoded = decoded.replace(/[！!]+/g, '');
+                decoded = decoded.replace(/\s+/g, ' ').trim();
+
+                // 反向替换
+                const DECODE_MAP = new Map();
+                for (let [key, val] of ENCODE_MAP.entries()) {
+                    DECODE_MAP.set(val, key);
+                }
+
+                const phraseDecode = [
+                    ['すごい', '厉害'], ['好き', '喜欢'], ['めっちゃ', '非常'],
+                    ['ありがと', '谢谢'], ['ごめん', '对不起'], ['すてき', '好棒'],
+                    ['かわいい', '可爱'], ['かみ', '神'],
+                ];
+                for (let [key, val] of phraseDecode) {
+                    decoded = decoded.replaceAll(key, val);
+                }
+
+                let result = '';
+                for (let ch of decoded) {
+                    if (DECODE_MAP.has(ch)) {
+                        result += DECODE_MAP.get(ch);
+                    } else {
+                        result += ch;
+                    }
+                }
+
+                result = result.trim();
+                return result || '(空)';
+            }
+
+            // ----- 智能检测输入是中文还是花生语 -----
+            function detectLanguage(text) {
+                if (!text || !text.trim()) return 'unknown';
+
+                const trimmed = text.trim();
+
+                // 花生语特征检测
+                if (/ユ/.test(trimmed)) return 'peanut';
+
+                const exclamationCount = (trimmed.match(/[！!]/g) || []).length;
+                if (exclamationCount >= 3) return 'peanut';
+
+                const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+                if (emojiRegex.test(trimmed)) return 'peanut';
+
+                if (/[ァ-ヶ]/.test(trimmed)) return 'peanut';
+
+                // 检查是否包含中文字符（含繁简）
+                if (/[\u4e00-\u9fff]/.test(trimmed)) return 'chinese';
+
+                // 检查是否包含日文假名（非花生语特征）
+                if (/[ぁ-ん]/.test(trimmed)) return 'japanese';
+
+                // 检查是否包含英文字母
+                if (/[a-zA-Z]/.test(trimmed)) return 'english';
+
+                return 'chinese';
+            }
+
+            // ----- 智能转换入口 -----
+            function smartConvert(text) {
+                if (!text || !text.trim()) {
+                    return { result: '', direction: 'waiting' };
+                }
+
+                const lang = detectLanguage(text);
+
+                if (lang === 'peanut') {
+                    const result = decodePeanut(text);
+                    return { result, direction: 'peanutToZh' };
+                } else {
+                    const result = encodePeanut(text);
+                    return { result, direction: 'zhToPeanut' };
+                }
+            }
+
+            // ----- 获取翻译文本 -----
+            function getText(key) {
+                return LANG_TEXT[currentLang]?.[key] || LANG_TEXT['zh'][key];
+            }
+
+            // ----- DOM 元素 -----
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const swapTextBtn = document.getElementById('swapTextBtn');
+            const directionLabel = document.getElementById('directionLabel');
+            const statusBadge = document.getElementById('statusBadge');
+            const inputLabel = document.getElementById('inputLabel');
+            const outputLabel = document.getElementById('outputLabel');
+            const inputCount = document.getElementById('inputCount');
+            const outputCount = document.getElementById('outputCount');
+            const langBtns = document.querySelectorAll('.lang-btn');
+
+            // ----- 更新界面语言 -----
+            function updateLanguage() {
+                inputLabel.textContent = getText('inputLabel');
+                outputLabel.textContent = getText('outputLabel');
+                inputText.placeholder = getText('inputPlaceholder');
+                outputText.placeholder = getText('outputPlaceholder');
+                clearBtn.title = getText('clearTitle');
+                copyBtn.title = getText('copyTitle');
+                swapTextBtn.textContent = '⇄ ' + getText('swapTitle');
+
+                // 更新状态栏
+                const raw = inputText.value;
+                if (!raw.trim()) {
+                    directionLabel.textContent = getText('directionWaiting');
+                    statusBadge.innerHTML = `🧠 ${getText('statusDetecting')} <strong id="directionLabel">${getText('directionWaiting')}</strong>`;
+                    // 重新获取 directionLabel 引用
+                    const newDirLabel = document.getElementById('directionLabel');
+                    if (newDirLabel) directionLabel.textContent = newDirLabel.textContent;
+                } else {
+                    performConvert();
+                }
+
+                // 更新底部标签
+                document.querySelectorAll('.footer-note span')[0].textContent = '🥜 ' + getText('footerAuto');
+                document.querySelectorAll('.footer-note span')[1].textContent = '⚡ ' + getText('footerExclamation');
+                document.querySelectorAll('.footer-note span')[2].textContent = '✨ ' + getText('footerEmoji');
+            }
+
+            // ----- 更新计数 -----
+            function updateCounts() {
+                inputCount.textContent = inputText.value.length;
+                outputCount.textContent = outputText.value.length;
+            }
+
+            // ----- 执行转换 -----
+            function performConvert() {
+                const raw = inputText.value;
+                if (!raw.trim()) {
+                    outputText.value = '';
+                    directionLabel.textContent = getText('directionWaiting');
+                    updateCounts();
+                    return;
+                }
+
+                const { result, direction } = smartConvert(raw);
+                outputText.value = result;
+
+                if (direction === 'zhToPeanut') {
+                    directionLabel.textContent = getText('directionZhToPeanut');
+                } else if (direction === 'peanutToZh') {
+                    directionLabel.textContent = getText('directionPeanutToZh');
+                } else {
+                    directionLabel.textContent = getText('directionWaiting');
+                }
+                updateCounts();
+            }
+
+            // ----- 交换 -----
+            function swapText() {
+                const outVal = outputText.value;
+                if (outVal && outVal !== '(空)') {
+                    inputText.value = outVal;
+                    performConvert();
+                }
+            }
+
+            // ===== 事件绑定 =====
+            inputText.addEventListener('input', function() {
+                updateCounts();
+                if (window._convertTimer) {
+                    cancelAnimationFrame(window._convertTimer);
+                }
+                window._convertTimer = requestAnimationFrame(() => {
+                    performConvert();
+                    window._convertTimer = null;
+                });
+            });
+
+            clearBtn.addEventListener('click', function() {
+                inputText.value = '';
+                outputText.value = '';
+                directionLabel.textContent = getText('directionWaiting');
+                updateCounts();
+                inputText.focus();
+            });
+
+            copyBtn.addEventListener('click', async function() {
+                const text = outputText.value;
+                if (!text || text === '(空)') {
+                    showToast(getText('toastEmpty'), '⚠️');
+                    return;
+                }
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showToast(getText('toastCopied'), '✅');
+                } catch (err) {
+                    try {
+                        const temp = document.createElement('textarea');
+                        temp.value = text;
+                        document.body.appendChild(temp);
+                        temp.select();
+                        document.execCommand('copy');
+                        temp.remove();
+                        showToast(getText('toastCopied'), '✅');
+                    } catch (e2) {
+                        showToast(getText('toastCopyFail'), '❌');
+                    }
+                }
+            });
+
+            swapTextBtn.addEventListener('click', swapText);
+
+            inputText.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    performConvert();
+                }
+            });
+
+            // ----- 语言切换 -----
+            langBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    langBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentLang = this.dataset.lang;
+                    updateLanguage();
+                });
+            });
+
+            // ----- 初始化 -----
+            // 修复 directionLabel 引用
+            const dirLabel = document.getElementById('directionLabel');
+            if (dirLabel) {
+                // 替换为新的引用
+                const newDirLabel = document.getElementById('directionLabel');
+                if (newDirLabel) {
+                    // 保持引用
+                }
+            }
+            updateLanguage();
+            performConvert();
+        })();
+    </script>
+</body>
+</html>
